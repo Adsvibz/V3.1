@@ -7,10 +7,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Unzip project
+      - name: Locate project
         run: |
-          unzip -q -o Blendora*.zip -d proj
-          D=$(dirname "$(find proj -name settings.gradle.kts | head -1)")
+          echo "Files in repo:"
+          find . -maxdepth 2 -not -path './.git/*' -not -path './.git' | sort
+          Z=$(find . -iname "*blendora*.zip" | head -1)
+          if [ -n "$Z" ]; then
+            echo "Using zip: $Z"
+            unzip -q -o "$Z" -d proj
+            D=$(dirname "$(find proj -name settings.gradle.kts | head -1)")
+          elif [ -f settings.gradle.kts ]; then
+            echo "Using project in repo root"
+            D=.
+          else
+            echo "No Blendora zip or project found in the repo."
+            exit 1
+          fi
           echo "DIR=$D" >> $GITHUB_ENV
       - uses: actions/setup-java@v4
         with:
